@@ -1,5 +1,5 @@
-
-
+import 'dart:ui';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -26,9 +26,11 @@ class _TestState extends State<Test> {
 
 class Accounts {
   String name='';
+  String phoneNumber = '';
   int likes=0;
-  Accounts(String name, int likes) {
+  Accounts(String name, String phoneNumber , int likes) {
     this.name = name;
+    this.phoneNumber = phoneNumber;
     this.likes = likes;
   }
 }
@@ -43,11 +45,15 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   var a = 1;
   var accounts = [
+    Accounts('D' , '01012341234' , 0),
+    Accounts('Z' , '01012341234' , 0),
+    Accounts('A' , '01012341234' , 0),
+    Accounts('C' , '01012341234' , 0),
   ];
 
-  addAccount(var arr, String name, int likes) {
+  addAccount(var arr, String name, String phoneNumber , int likes) {
     setState(() {
-      arr.add( Accounts(name,likes) );
+      arr.add( Accounts(name , phoneNumber ,likes) );
     });
     // print(arr[arr.length-1].name);
   }
@@ -69,15 +75,38 @@ class _MyAppState extends State<MyApp> {
             );
           }
         ),
+
         appBar : AppBar(
-          title : Text('친구 수 : ' + accounts.length.toString()),
+          title : Container(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('연락처'),
+                  Text('친구 수 : ' + accounts.length.toString()),
+                  IconButton(
+                      icon: Icon(Icons.sort) ,
+                      onPressed: (){
+                        setState( (){
+                          accounts.sort( (a,b) => a.name.compareTo(b.name) );
+                        });
+                      }),
+                ],
+              )
+          ),
         ),
+
         body : ListView.builder(
           itemCount: accounts.length,
           itemBuilder: (context , i){
             return ListTile(
               leading: Icon(Icons.account_circle),
-              title : Text(accounts[i].name),
+              title : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(accounts[i].name),
+                  Text(accounts[i].phoneNumber),
+                ],
+              ),
               trailing: ElevatedButton(
                 onPressed: () {
                   setState(() {
@@ -106,7 +135,8 @@ class AddDialog extends StatefulWidget {
 }
 
 class _AddDialogState extends State<AddDialog> {
-  final myController = TextEditingController();
+  final nameController = TextEditingController();
+  final numberController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -114,32 +144,68 @@ class _AddDialogState extends State<AddDialog> {
     return Dialog(
       child: Container(
         padding: EdgeInsets.all(20),
-        height: 200,
+        height: 300,
         width: 300,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Contact" , style: TextStyle(fontWeight: FontWeight.w700 , fontSize : 20),),
-            TextField(
-              controller: myController,
-
+            Container(
+              width: 300,
+              child: TextField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide : BorderSide(width: 1, color : Colors.blueAccent),
+                  ),
+                  hintText : '이름을 입력하세요.',
+                  labelText : '이름',
+                ),
+                controller: nameController,
+              ),
+            ),
+            Container(
+              width: 300,
+              child: TextField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide : BorderSide(width: 1, color : Colors.blueAccent),
+                  ),
+                  hintText : '전화번호를 입력하세요.',
+                  labelText : '전화번호',
+                ),
+                controller: numberController,
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
                   onPressed: (){
-                    print(context.toString());
                     Navigator.pop(context);
                   },
                   child: Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: (){
-                    widget.addFunc(widget.account,myController.text,0);
-                    myController.text = '';
-                    Navigator.pop(context);
+                    if(nameController.text != '' && numberController.text != '') {
+                      widget.addFunc(widget.account,nameController.text , numberController.text , 0);
+                      nameController.text = numberController.text = '';
+                      Navigator.pop(context);
+                    }
+                    else {
+                      showDialog(context: context, builder: (context) {
+                        return Dialog(
+                          child : Container(
+                            width: 200,
+                            height : 50,
+                            child: Text('이름을 입력하세요' , style: TextStyle(fontSize : 25),),
+                          ),
+                        );
+                      });
+                    }
                   },
                   child: Text('OK'),
                 ),
